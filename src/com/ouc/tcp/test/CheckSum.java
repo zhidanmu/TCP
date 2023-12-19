@@ -35,7 +35,7 @@ public class CheckSum {
 			}
 		}
 		
-		
+		checkSum=~checkSum;
 		
 		return (short) checkSum;
 	}
