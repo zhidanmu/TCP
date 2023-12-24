@@ -102,7 +102,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			7.出错 / 丢包 / 延迟
 		 */
 
-		tcpH.setTh_eflag((byte)1);	//eFlag=0，信道无错误
+		tcpH.setTh_eflag((byte)4);	//eFlag=0，信道无错误
 				
 		//发送数据报
 		client.send(replyPack);

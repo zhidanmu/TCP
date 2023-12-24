@@ -14,6 +14,9 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	private TCP_PACKET tcpPack;	//待发送的TCP数据报
 	private volatile int flag = 0;
 	
+	private UDT_Timer timer=null;
+	private UDT_RetransTask  reTrans=null;
+	
 	/*构造函数*/
 	public TCP_Sender() {
 		super();	//调用超类构造函数
@@ -36,8 +39,13 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		udt_send(tcpPack);
 		flag = 0;
 		
+		//设置timer
+		timer=new UDT_Timer();
+		reTrans=new UDT_RetransTask(client,tcpPack);
+		timer.schedule(reTrans,3000,3000);;
+		
 		//等待ACK报文
-		//waitACK();
+		waitACK();
 		while (flag==0);
 	}
 	
@@ -55,7 +63,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 			6.丢包 / 延迟
 			7.出错 / 丢包 / 延迟
 		 */
-		tcpH.setTh_eflag((byte)1);		
+		tcpH.setTh_eflag((byte)4);		
 		//System.out.println("to send: "+stcpPack.getTcpH().getTh_seq());				
 		//发送数据报
 		client.send(stcpPack);
@@ -65,18 +73,21 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	//需要修改
 	public void waitACK() {
 		//循环检查ackQueue
-		//循环检查确认号对列中是否有新收到的ACK		
-		if(!ackQueue.isEmpty()){
-			int currentAck=ackQueue.poll();
-			// System.out.println("CurrentAck: "+currentAck);
-			if (currentAck == tcpPack.getTcpH().getTh_seq()){
-				System.out.println("Clear: "+tcpPack.getTcpH().getTh_seq());
-				flag = 1;
-				//break;
-			}else{
-				System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
-				udt_send(tcpPack);
-				flag = 0;
+		//循环检查确认号对列中是否有新收到的ACK
+		while(true) {
+			if(!ackQueue.isEmpty()){
+				int currentAck=ackQueue.poll();
+				// System.out.println("CurrentAck: "+currentAck);
+				if (currentAck == tcpPack.getTcpH().getTh_seq()){
+					System.out.println("Clear: "+tcpPack.getTcpH().getTh_seq());
+					flag = 1;
+					timer.cancel();
+					break;
+				}else{
+					System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
+					udt_send(tcpPack);
+					flag = 0;
+				}
 			}
 		}
 	}
@@ -95,7 +106,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		    System.out.println();
 		}
 	    //处理ACK报文
-	    waitACK();
+	    //waitACK();
 	   
 	}
 	

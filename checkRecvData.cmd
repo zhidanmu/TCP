@@ -10,6 +10,8 @@ for /f "delims= skip=1" %%i in ('certUtil -hashfile recvData_standard.txt MD5') 
 	goto compare
 )
 :compare
+echo r:%recv%
+echo s:%standard%
 if %recv%==%standard% (echo same) else (echo error)
 
 pause 
