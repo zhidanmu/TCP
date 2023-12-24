@@ -15,6 +15,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
 	int sequence=1;//用于记录当前待接收的包序号，注意包序号不完全是
+	ReceiverSlidingWindow rslwindow=new ReceiverSlidingWindow();
 		
 	/*构造函数*/
 	public TCP_Receiver() {
@@ -32,31 +33,44 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
 			//回复ACK报文段
-			reply(ackPack);			
+//			reply(ackPack);			
 			
-			//将接收到的正确有序的数据插入data队列，准备交付
-			if(recvPack.getTcpH().getTh_seq()==sequence) {
-				dataQueue.add(recvPack.getTcpS().getData());				
-				sequence+=recvPack.getTcpS().getData().length;
-			}//与期待相同的包交付，其他丢掉
+//			//将接收到的正确有序的数据插入data队列，准备交付
+//			if(recvPack.getTcpH().getTh_seq()==sequence) {
+//				dataQueue.add(recvPack.getTcpS().getData());				
+//				sequence+=recvPack.getTcpS().getData().length;
+//			}//与期待相同的包交付，其他丢掉
+			
+			if(rslwindow.recvPacket(recvPack)) {
+				System.out.println("Recieve Seq: "+recvPack.getTcpH().getTh_seq());
+				reply(ackPack);
+			}else{
+				System.out.println("Recieve Seq[error]: "+recvPack.getTcpH().getTh_seq());
+			};
 			
 		}else{
-			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
-			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
-			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+sequence);		
-			tcpH.setTh_ack(sequence-recvPack.getTcpS().getData().length);
-			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
-			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
+//			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
+//			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
+//			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+sequence);		
+//			tcpH.setTh_ack(sequence-recvPack.getTcpS().getData().length);
+//			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
+//			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
 			//回复ACK报文段
-			reply(ackPack);
+			//reply(ackPack);
 		}
 		
 		System.out.println();
 		
 		
 		//交付数据（每20组数据交付一次）
-		if(dataQueue.size() == 20) 
-			deliver_data();	
+//		if(dataQueue.size() == 20) 
+//			deliver_data();	
+		
+		while(rslwindow.can_data_deliver()) {
+			dataQueue=rslwindow.get_data_deliver();
+			deliver_data();
+		}
+		
 	}
 
 	@Override
@@ -102,10 +116,11 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			7.出错 / 丢包 / 延迟
 		 */
 
-		tcpH.setTh_eflag((byte)4);	//eFlag=0，信道无错误
+		tcpH.setTh_eflag((byte)7);	//eFlag=0，信道无错误
 				
 		//发送数据报
 		client.send(replyPack);
+		System.out.println("send ACK:"+replyPack.getTcpH().getTh_ack());
 	}
 	
 }
