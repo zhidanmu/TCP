@@ -10,7 +10,7 @@ import com.ouc.tcp.message.TCP_PACKET;
 
 public class SenderSlidingWindow extends SlidingWindow{
 	
-	private UDT_Timer timer = null;
+	private volatile UDT_Timer timer = null;
 	private TCP_Sender sender;
 	private volatile int wlast=-1;
 	
@@ -54,6 +54,10 @@ public class SenderSlidingWindow extends SlidingWindow{
 			return false;
 		}
 		int seq=packet.getTcpH().getTh_seq();
+		if(seq>=wbase+wsize*singleDataSize) {
+			return false;
+		}
+		
 		
 		datamap.put(seq, packet);
 		wlast=wlast>seq?wlast:seq;
@@ -84,5 +88,19 @@ public class SenderSlidingWindow extends SlidingWindow{
 			wbase+=singleDataSize;
 			System.out.println("sender-wbase: "+get_wbase());
 		}
+	}
+	
+	
+	@Override
+	public boolean isFull(){
+		if(datamap.size()>=wsize) {
+			return true;
+		}
+		
+		if(wlast>=wbase+(wsize-1)*singleDataSize) {
+			return true;
+		}
+		
+		return false;
 	}
 }
