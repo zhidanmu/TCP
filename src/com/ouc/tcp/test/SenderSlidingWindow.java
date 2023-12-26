@@ -144,22 +144,16 @@ public class SenderSlidingWindow extends SlidingWindow{
 				ssthresh=wsize;
 				ssthresh/=2;
 				wsize=ssthresh;
-			}else {
-				//拥塞控制
-				if(wsize<ssthresh) {
-					wsize*=2;
-				}else {
-					wsize++;
-				}
 			}
-			
 		}else{
 			dupack=0;
+			int beforesize=datamap.size();
 			slideTo(ack+singleDataSize);
+			int aftersize=datamap.size();
 			retimer();
 			//拥塞控制
 			if(wsize<ssthresh) {
-				wsize*=2;
+				wsize+=beforesize-aftersize;
 			}else {
 				wsize++;
 			}
