@@ -15,12 +15,15 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
 	int sequence=1;//用于记录当前待接收的包序号，注意包序号不完全是
-	ReceiverSlidingWindow rslwindow=new ReceiverSlidingWindow();
+	ReceiverSlidingWindow rslwindow=new ReceiverSlidingWindow(this);
 		
 	/*构造函数*/
 	public TCP_Receiver() {
 		super();	//调用超类构造函数
 		super.initTCP_Receiver(this);	//初始化TCP接收端
+		
+		//设置窗口初始大小
+		rslwindow.set_wsize(8);
 	}
 
 	@Override
@@ -43,7 +46,9 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			
 			if(rslwindow.recvPacket(recvPack)) {
 				System.out.println("Recieve Seq: "+recvPack.getTcpH().getTh_seq());
-				reply(ackPack);
+				rslwindow.set_ack_packet(ackPack);
+				rslwindow.send_ack_packet(ackPack);
+				//reply(ackPack);
 			}else{
 				System.out.println("Recieve Seq[error]: "+recvPack.getTcpH().getTh_seq());
 			};

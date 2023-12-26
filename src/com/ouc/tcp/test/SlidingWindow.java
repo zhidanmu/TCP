@@ -7,7 +7,7 @@ import com.ouc.tcp.message.TCP_PACKET;
 public class SlidingWindow {
 	
 	volatile int wbase=1;//窗口首部序号
-	volatile int wsize=8;//窗口大小
+	volatile int wsize=16;//窗口大小
 	ConcurrentHashMap<Integer,TCP_PACKET> datamap=new ConcurrentHashMap<Integer,TCP_PACKET>(); 
 	int singleDataSize=100;//单组数据大小
 	
@@ -41,7 +41,7 @@ public class SlidingWindow {
 		return (datamap.size()>=wsize);
 	}
 	
-	//滑动
+	//滑动(需要override)
 	 void slide() {
 		
 	}

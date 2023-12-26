@@ -3,6 +3,9 @@
 
 package com.ouc.tcp.test;
 
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import com.ouc.tcp.client.TCP_Sender_ADT;
 import com.ouc.tcp.client.UDT_RetransTask;
 import com.ouc.tcp.client.UDT_Timer;
@@ -23,6 +26,10 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	public TCP_Sender() {
 		super(); // 调用超类构造函数
 		super.initTCP_Sender(this); // 初始化TCP发送端
+		
+		//设置窗口初始大小
+		sslwindow.set_wsize(8);
+	
 	}
 
 	@Override
@@ -82,6 +89,8 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		// 发送数据报
 		client.send(stcpPack);
 	}
+	
+	private LinkedBlockingQueue<TCP_PACKET> recvQueue=new LinkedBlockingQueue<TCP_PACKET>();//有序的可上交的数据
 
 	@Override
 	// 需要修改
@@ -97,7 +106,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		 * System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
 		 * udt_send(tcpPack); flag = 0; } } }
 		 */
-
+	/*
 		while(!ackQueue.isEmpty()) {
 			int currentAck = ackQueue.poll();
 			System.out.println("CurrentAck: "+currentAck);
@@ -109,7 +118,18 @@ public class TCP_Sender extends TCP_Sender_ADT {
 			}
 			
 		}
-
+	*/
+		while(!recvQueue.isEmpty()) {
+			TCP_PACKET currentRecv = recvQueue.poll();
+			//sslwindow.recvACK(currentAck);
+			sslwindow.recvACKPacket(currentRecv);
+			if(!sslwindow.isFull()) {
+				flag=1;
+			}else {
+				flag=0;
+			}	
+		}
+		
 	}
 
 	@Override
@@ -118,7 +138,13 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		if (CheckSum.computeChkSum(recvPack) == recvPack.getTcpH().getTh_sum()) {
 			// 进行校验
 			System.out.println("Receive ACK Number： " + recvPack.getTcpH().getTh_ack());
-			ackQueue.add(recvPack.getTcpH().getTh_ack());
+			//ackQueue.add(recvPack.getTcpH().getTh_ack());
+			try {
+				recvQueue.put(recvPack);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			System.out.println();
 		} else {
 			System.out.println("Receive ACK ERROR:" + recvPack.getTcpH().getTh_ack());
