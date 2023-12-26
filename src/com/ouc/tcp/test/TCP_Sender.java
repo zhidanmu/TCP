@@ -90,7 +90,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		client.send(stcpPack);
 	}
 	
-	private LinkedBlockingQueue<TCP_PACKET> recvQueue=new LinkedBlockingQueue<TCP_PACKET>();//有序的可上交的数据
+	private LinkedBlockingQueue<TCP_PACKET> recvQueue=new LinkedBlockingQueue<TCP_PACKET>();//收到的包
 
 	@Override
 	// 需要修改

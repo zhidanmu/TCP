@@ -98,7 +98,6 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 		//发送期望获取代码不可,必须发送最后一个收到的日志才会有记录
 		ackPacket.getTcpH().setTh_ack(wbase-singleDataSize);//最后一个收到的seq
 		ackPacket.getTcpH().setTh_sum(CheckSum.computeChkSum(ackPacket));
-		
 		//sack需要先分配空间！！！！
 		int k=0;
 		int lk=wbase;
@@ -118,17 +117,15 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 				lk+=singleDataSize;
 			}
 		}
-		
+		//补充尾段
 		if(rk<wbase+wsize*singleDataSize) {
 			sackQueue.add(lastack+singleDataSize);
 			sackQueue.add(wbase+wsize*singleDataSize);
 			k++;
 		}
-		
 		if(k>4)k=4;
 		//分配sack空间
 		ackPacket.getTcpH().setTh_sackFlag((byte) (k));
-				
 		for(int i=0;i<k;i++) {
 			lk=sackQueue.poll();
 			rk=sackQueue.poll();
@@ -147,8 +144,6 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 				System.out.println(e);
 			}
 		}
-		
-		
 		
 		timer=new UDT_Timer();
 		TimerTask task=new TimerTask(){
