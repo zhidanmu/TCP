@@ -28,7 +28,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		super.initTCP_Sender(this); // 初始化TCP发送端
 		
 		//设置窗口初始大小
-		sslwindow.set_wsize(8);
+		sslwindow.set_wsize(1);
 	
 	}
 

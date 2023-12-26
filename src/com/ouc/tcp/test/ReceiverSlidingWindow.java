@@ -88,8 +88,8 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			}
 			datamap.remove(wbase);
 			wbase+=singleDataSize;
-			System.out.println("recver-wbase: "+get_wbase());
 		}
+		System.out.println("recver-wbase: "+get_wbase());
 	}
 	
 	//设置ack包
@@ -129,7 +129,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 		for(int i=0;i<k;i++) {
 			lk=sackQueue.poll();
 			rk=sackQueue.poll();
-			System.out.println("put "+"lk/rk:"+lk+"/"+rk);
+//			System.out.println("put "+"lk/rk:"+lk+"/"+rk);
 			ackPacket.getTcpH().setTh_sack_border(i, lk, rk-1);
 		}
 		

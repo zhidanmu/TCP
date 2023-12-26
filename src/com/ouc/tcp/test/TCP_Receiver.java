@@ -23,7 +23,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 		super.initTCP_Receiver(this);	//初始化TCP接收端
 		
 		//设置窗口初始大小
-		rslwindow.set_wsize(8);
+		rslwindow.set_wsize(2048);
 	}
 
 	@Override

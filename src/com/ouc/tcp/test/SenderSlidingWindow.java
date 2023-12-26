@@ -16,6 +16,8 @@ public class SenderSlidingWindow extends SlidingWindow{
 	private volatile int dupack=0;//重复收到的ack
 	private int final_seq=99901;//最后片段的seq
 	
+	private volatile int ssthresh=16;
+	
 	//构造函数
 	public SenderSlidingWindow(TCP_Sender s) {
 		super();
@@ -43,6 +45,12 @@ public class SenderSlidingWindow extends SlidingWindow{
 			@Override
 			public void run() {
 				resendAll();
+				//超时，慢开始
+				ssthresh=wsize/2;
+				wsize=1;
+				dupack=0;
+				System.out.println("slow start");
+				System.out.println("cwnd:"+wsize);
 			}
 		};
 		timer.schedule(task,3000,3000);
@@ -100,10 +108,12 @@ public class SenderSlidingWindow extends SlidingWindow{
 		
 		int[] donotRecv=ackPacket.getTcpH().getTh_sack_borders();
 
+		/*
 		System.out.println("donolen:"+donotRecv.length);
 		for(int j=0;j<donotRecv.length;j++) {
 			System.out.println("donorecv"+j+":"+donotRecv[j]);
 		}
+		*/
 		
 		if(ack<wbase-singleDataSize) {
 			return true;
@@ -113,12 +123,12 @@ public class SenderSlidingWindow extends SlidingWindow{
 			int lr=donotRecv[2*i-1]+1;
 			int rr=donotRecv[2*i]-1;
 			
-			System.out.println("lr/rr:"+lr+"/"+rr);
+//			System.out.println("lr/rr:"+lr+"/"+rr);
 			int nr=lr;
 			while(nr<rr) {
 				datamap.remove(nr);
 				nr+=singleDataSize;
-				System.out.println("remove:"+nr);
+//				System.out.println("remove:"+nr);
 			}
 			
 		}
@@ -127,17 +137,34 @@ public class SenderSlidingWindow extends SlidingWindow{
 		if(ack==wbase-singleDataSize) {
 			dupack++;
 			if(dupack>=3) {
+				//快恢复
 				dupack=0;
 				resendAll();	
 				retimer();
+				ssthresh=wsize;
+				ssthresh/=2;
+				wsize=ssthresh;
+			}else {
+				//拥塞控制
+				if(wsize<ssthresh) {
+					wsize*=2;
+				}else {
+					wsize++;
+				}
 			}
 			
 		}else{
 			dupack=0;
 			slideTo(ack+singleDataSize);
 			retimer();
+			//拥塞控制
+			if(wsize<ssthresh) {
+				wsize*=2;
+			}else {
+				wsize++;
+			}
 		}
-		
+		System.out.println("cwnd:"+wsize);
 		return true;
 	}
 	
@@ -147,15 +174,15 @@ public class SenderSlidingWindow extends SlidingWindow{
 		dupack=0;
 		while(wbase<=wlast&&!datamap.contains(wbase)) {
 			wbase+=singleDataSize;
-			System.out.println("sender-wbase: "+get_wbase());
 		}
+		System.out.println("sender-wbase: "+get_wbase());
 	}
 	
 	public void slideTo(int newack) {
 		while(wbase<newack) {
 			datamap.remove(wbase);
 			wbase+=singleDataSize;
-			System.out.println("sender-wbase: "+get_wbase());
+//			System.out.println("sender-wbase: "+get_wbase());
 		}
 	}
 	
@@ -173,4 +200,6 @@ public class SenderSlidingWindow extends SlidingWindow{
 		
 		return false;
 	}
+	
+	
 }
