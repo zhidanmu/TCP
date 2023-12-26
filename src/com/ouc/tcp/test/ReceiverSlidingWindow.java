@@ -148,14 +148,19 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			}
 		}
 		
+		
+		
 		timer=new UDT_Timer();
 		TimerTask task=new TimerTask(){
 			@Override
 			public void run() {
 				receiver.reply(ackPacket);
+				if(ackPacket.getTcpH().getTh_ack()>=final_seq) {
+					timer.cancel();
+				}
 			}
 		};
-		timer.schedule(task,200);
+		timer.schedule(task,500);
 		
 	}
 	
