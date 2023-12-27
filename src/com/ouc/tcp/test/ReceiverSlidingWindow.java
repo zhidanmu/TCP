@@ -14,6 +14,8 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 	private int min_deliver_num=20;//最小上交数量
 	private volatile UDT_Timer timer = null;
 	private int final_seq=99901;
+	private volatile int recvCnt=0;//累积收到片段数量计数
+	private int replayCntLimit=8;//反馈界限,累积数量达到反馈界限直接反馈
 	
 	// 构造函数
 	public ReceiverSlidingWindow(TCP_Receiver r) {
@@ -66,6 +68,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 		
 		if(!datamap.containsKey(seq)) {
 			datamap.put(seq, packet);
+			recvCnt++;
 			if(seq==wbase) {
 				slide();
 			}
@@ -144,6 +147,13 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 				System.out.println(e);
 			}
 		}
+		
+		if(recvCnt>=replayCntLimit) {
+			receiver.reply(ackPacket);
+			recvCnt=0;
+			return;
+		}
+		
 		
 		timer=new UDT_Timer();
 		TimerTask task=new TimerTask(){
