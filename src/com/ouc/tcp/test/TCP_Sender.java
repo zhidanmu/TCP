@@ -122,7 +122,9 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		while(!recvQueue.isEmpty()) {
 			TCP_PACKET currentRecv = recvQueue.poll();
 			//sslwindow.recvACK(currentAck);
-			sslwindow.recvACKPacket(currentRecv);
+			if(currentRecv!=null) {
+				sslwindow.recvACKPacket(currentRecv);
+			}
 			if(!sslwindow.isFull()) {
 				flag=1;
 			}else {
@@ -140,11 +142,11 @@ public class TCP_Sender extends TCP_Sender_ADT {
 			System.out.println("Receive ACK Number： " + recvPack.getTcpH().getTh_ack());
 			//ackQueue.add(recvPack.getTcpH().getTh_ack());
 			try {
-				recvQueue.put(recvPack);
-			} catch (InterruptedException e) {
+				recvQueue.put(recvPack.clone());
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			} 
 			System.out.println();
 		} else {
 			System.out.println("Receive ACK ERROR:" + recvPack.getTcpH().getTh_ack());
