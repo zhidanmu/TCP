@@ -47,7 +47,7 @@ public class SenderSlidingWindow extends SlidingWindow{
 				resendAll();
 				//超时，慢开始
 				ssthresh=wsize/2;
-				wsize=1;
+				wsize=ssthresh>0?1:0;
 				dupack=0;
 				System.out.println("slow start");
 				System.out.println("cwnd:"+wsize);
@@ -144,6 +144,7 @@ public class SenderSlidingWindow extends SlidingWindow{
 				ssthresh=wsize;
 				ssthresh/=2;
 				wsize=ssthresh;
+				System.out.println("fast recovery");
 			}
 		}else{
 			dupack=0;

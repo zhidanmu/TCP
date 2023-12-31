@@ -73,6 +73,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 				slide();
 			}
 		}
+	
 		return true;
 	}
 	
@@ -160,6 +161,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			@Override
 			public void run() {
 				receiver.reply(ackPacket);
+				recvCnt=0;
 				if(ackPacket.getTcpH().getTh_ack()>=final_seq) {
 					timer.cancel();
 				}
