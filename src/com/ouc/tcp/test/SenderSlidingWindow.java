@@ -138,7 +138,7 @@ public class SenderSlidingWindow extends SlidingWindow {
 		System.out.println("handle ack:" + ack);
 		// 因为期望收到不会在log里记录,仅能处理前一个记录
 		if (ack == wbase - singleDataSize) {
-			//dupack++;
+			dupack++;
 			if (dupack >= 3) {
 				// 快恢复
 				dupack = 0;

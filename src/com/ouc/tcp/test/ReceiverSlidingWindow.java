@@ -73,7 +73,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			datamap.put(seq, packet);
 			if(seq==wbase) {
 				slide();
-				//recvCnt++;
+				recvCnt++;
 				immediateReply=false;
 			}else {
 				immediateReply=true;
