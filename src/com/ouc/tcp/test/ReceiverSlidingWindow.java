@@ -1,6 +1,7 @@
 package com.ouc.tcp.test;
 
 import java.util.Queue;
+import java.util.Random;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,7 +16,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 	private volatile UDT_Timer timer = null;
 	private int final_seq=99901;
 	private volatile int recvCnt=0;//累积收到片段数量计数
-	private int replayCntLimit=4;//反馈界限,累积数量达到反馈界限直接反馈
+	private int replyCntLimit=4;//反馈界限,累积数量达到反馈界限直接反馈
 	private volatile boolean immediateReply=false;//是否立即回复
 	
 	// 构造函数
@@ -70,10 +71,9 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 		
 		if(!datamap.containsKey(seq)) {
 			datamap.put(seq, packet);
-			//recvCnt++;
 			if(seq==wbase) {
 				slide();
-				recvCnt++;
+				//recvCnt++;
 				immediateReply=false;
 			}else {
 				immediateReply=true;
@@ -156,7 +156,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			}
 		}
 		
-		if(recvCnt>=replayCntLimit) {
+		if(recvCnt>=replyCntLimit) {
 			immediateReply=true;
 		}
 		
@@ -180,7 +180,9 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 				}
 			}
 		};
-		timer.schedule(task,500);
+		
+		int delayTime=500;
+		timer.schedule(task,delayTime);
 		
 	}
 	

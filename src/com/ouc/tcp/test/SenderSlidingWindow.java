@@ -63,9 +63,9 @@ public class SenderSlidingWindow extends SlidingWindow {
 	// 重发窗口内数据
 	public void resendAll() {
 		int nidx = wbase;
-		System.out.println("resend from seq:" + nidx);
+		System.out.println("resend from seq:" + nidx + " to "+ resendEndIndex);
 		System.out.println();
-		for (; nidx <= wbase + wsize * singleDataSize && nidx<=wlast; nidx += singleDataSize) {
+		for (; nidx <= wbase + wsize * singleDataSize && nidx<=resendEndIndex; nidx += singleDataSize) {
 			TCP_PACKET packet = datamap.get(nidx);
 			if (packet != null) {
 				sender.udt_send(packet);
@@ -85,6 +85,7 @@ public class SenderSlidingWindow extends SlidingWindow {
 	}
 
 	// 处理ack
+	@Deprecated
 	public boolean recvACK(int ack) {
 		if (ack > wlast) {
 			return false;
@@ -137,7 +138,7 @@ public class SenderSlidingWindow extends SlidingWindow {
 		System.out.println("handle ack:" + ack);
 		// 因为期望收到不会在log里记录,仅能处理前一个记录
 		if (ack == wbase - singleDataSize) {
-			dupack++;
+			//dupack++;
 			if (dupack >= 3) {
 				// 快恢复
 				dupack = 0;
@@ -173,6 +174,7 @@ public class SenderSlidingWindow extends SlidingWindow {
 	}
 
 	@Override
+	@Deprecated
 	public void slide() {
 		dupack = 0;
 		while (wbase <= wlast && !datamap.contains(wbase)) {
@@ -194,6 +196,9 @@ public class SenderSlidingWindow extends SlidingWindow {
 	public boolean isFull() {
 		if (wlast >= wbase + (wsize - 1) * singleDataSize) {
 			return true;
+		}
+		if(resendEndIndex>0) {
+			return true;//重发未完成
 		}
 
 		return false;
