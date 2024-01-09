@@ -23,7 +23,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 		super.initTCP_Receiver(this);	//初始化TCP接收端
 		
 		//设置窗口初始大小
-		rslwindow.set_wsize(2048);
+		rslwindow.set_wsize(16);
 	}
 
 	@Override
@@ -47,7 +47,12 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			if(rslwindow.recvPacket(recvPack)) {
 				System.out.println("Recieve Seq: "+recvPack.getTcpH().getTh_seq());
 				rslwindow.set_ack_packet(ackPack);
-				rslwindow.send_ack_packet(ackPack);
+				try {
+					rslwindow.send_ack_packet(ackPack.clone());
+				} catch (CloneNotSupportedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				//reply(ackPack);
 			}else{
 				System.out.println("Recieve Seq[error]: "+recvPack.getTcpH().getTh_seq());

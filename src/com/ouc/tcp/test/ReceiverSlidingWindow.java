@@ -1,6 +1,7 @@
 package com.ouc.tcp.test;
 
 import java.util.Queue;
+import java.util.Random;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,6 +15,9 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 	private int min_deliver_num=20;//最小上交数量
 	private volatile UDT_Timer timer = null;
 	private int final_seq=99901;
+	private volatile int recvCnt=0;//累积收到片段数量计数
+	private int replyCntLimit=4;//反馈界限,累积数量达到反馈界限直接反馈
+	private volatile boolean immediateReply=false;//是否立即回复
 	
 	// 构造函数
 	public ReceiverSlidingWindow(TCP_Receiver r) {
@@ -48,6 +52,7 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			}
 			ret.add(tp);
 		}
+		
 		System.out.println("deliver data(size:"+ret.size()+")");
 		System.out.println();
 		return ret;
@@ -68,8 +73,13 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			datamap.put(seq, packet);
 			if(seq==wbase) {
 				slide();
+				recvCnt++;
+				immediateReply=false;
+			}else {
+				immediateReply=true;
 			}
 		}
+	
 		return true;
 	}
 	
@@ -96,7 +106,8 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 	public void set_ack_packet(TCP_PACKET ackPacket) {
 		int lastack=ackPacket.getTcpH().getTh_ack();
 		//发送期望获取代码不可,必须发送最后一个收到的日志才会有记录
-		ackPacket.getTcpH().setTh_ack(wbase-singleDataSize);//最后一个收到的seq
+		ackPacket.getTcpH().setTh_ack(wbase-singleDataSize);//最后一个收到的有序的seq
+		System.out.println("reset ACK:"+(wbase-singleDataSize));
 		ackPacket.getTcpH().setTh_sum(CheckSum.computeChkSum(ackPacket));
 		//sack需要先分配空间！！！！
 		int k=0;
@@ -145,17 +156,33 @@ public class ReceiverSlidingWindow extends SlidingWindow {
 			}
 		}
 		
+		if(recvCnt>=replyCntLimit) {
+			immediateReply=true;
+		}
+		
+		if(immediateReply) {
+			receiver.reply(ackPacket);
+			recvCnt=0;
+			immediateReply=false;
+			return;
+		}
+		
+		
 		timer=new UDT_Timer();
 		TimerTask task=new TimerTask(){
 			@Override
 			public void run() {
 				receiver.reply(ackPacket);
+				recvCnt=0;
+				immediateReply=false;
 				if(ackPacket.getTcpH().getTh_ack()>=final_seq) {
 					timer.cancel();
 				}
 			}
 		};
-		timer.schedule(task,500);
+		
+		int delayTime=500;
+		timer.schedule(task,delayTime);
 		
 	}
 	
